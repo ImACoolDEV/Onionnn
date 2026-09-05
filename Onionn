@@ -1,3 +1,10 @@
+-- Single-Execution Protection
+if _G.GreenOnionLoaded then
+    warn("Green Onion V2 is already loaded!")
+    return
+end
+_G.GreenOnionLoaded = true
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -7,6 +14,11 @@ local localPlayer = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 local playerGui = localPlayer:WaitForChild("PlayerGui")
 
+-- Destroy existing UI if re-executed
+if playerGui:FindFirstChild("GreenOnionV2Gui") then
+    playerGui.GreenOnionV2Gui:Destroy()
+end
+
 -- ==========================================
 -- 1. BUILD THE GREEN UI
 -- ==========================================
@@ -15,12 +27,11 @@ screenGui.Name = "GreenOnionV2Gui"
 screenGui.ResetOnSpawn = false 
 screenGui.Parent = playerGui
 
--- Increased height to 170 to fit the health bar
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
 mainFrame.Size = UDim2.new(0, 240, 0, 170)
 mainFrame.Position = UDim2.new(0.05, 0, 0.4, 0)
-mainFrame.BackgroundColor3 = Color3.fromRGB(15, 25, 15) -- Dark green tint
+mainFrame.BackgroundColor3 = Color3.fromRGB(15, 25, 15)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
 mainFrame.ClipsDescendants = true 
@@ -31,7 +42,7 @@ uiCorner.CornerRadius = UDim.new(0, 6)
 uiCorner.Parent = mainFrame
 
 local uiStroke = Instance.new("UIStroke")
-uiStroke.Color = Color3.fromRGB(50, 200, 50) -- Green stroke
+uiStroke.Color = Color3.fromRGB(50, 200, 50)
 uiStroke.Thickness = 1.5
 uiStroke.Parent = mainFrame
 
@@ -122,7 +133,7 @@ healthBarBG.BorderSizePixel = 0
 healthBarBG.Parent = contentFrame
 
 local healthBarFill = Instance.new("Frame")
-healthBarFill.Size = UDim2.new(0, 0, 1, 0) -- Starts empty
+healthBarFill.Size = UDim2.new(0, 0, 1, 0)
 healthBarFill.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
 healthBarFill.BorderSizePixel = 0
 healthBarFill.Parent = healthBarBG
@@ -155,7 +166,7 @@ end)
 
 closeBtn.MouseButton1Click:Connect(function()
     screenGui:Destroy()
-    script:Destroy()
+    _G.GreenOnionLoaded = nil
 end)
 
 local dragging, dragInput, dragStart, startPos
@@ -169,11 +180,13 @@ topBar.InputBegan:Connect(function(input)
         end)
     end
 end)
+
 topBar.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
         dragInput = input
     end
 end)
+
 UserInputService.InputChanged:Connect(function(input)
     if input == dragInput and dragging then
         local delta = input.Position - dragStart
@@ -202,11 +215,10 @@ circleStroke.Color = Color3.fromRGB(255, 255, 255)
 circleStroke.Parent = circleFrame
 
 local circleGradient = Instance.new("UIGradient")
--- Sleek green gradient
 circleGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 100, 0)),     -- Dark Green
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(50, 255, 50)), -- Lime Green
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 100, 0))      -- Dark Green
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 100, 0)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(50, 255, 50)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 100, 0))
 })
 circleGradient.Parent = circleStroke
 
@@ -316,7 +328,6 @@ RunService.RenderStepped:Connect(function(deltaTime)
         
         local target = getNearestTarget()
         if target then
-            -- Update target health bar
             local targetHumanoid = target.Parent:FindFirstChild("Humanoid")
             if targetHumanoid then
                 local hp = math.max(0, targetHumanoid.Health)
@@ -327,12 +338,10 @@ RunService.RenderStepped:Connect(function(deltaTime)
                 healthBarFill.Size = UDim2.new(hpPercent, 0, 1, 0)
             end
 
-            -- Aim smoothing
             local smoothFactor = rampageActive and 0.85 or 0.15
             local goalCFrame = CFrame.new(camera.CFrame.Position, target.Position)
             camera.CFrame = camera.CFrame:Lerp(goalCFrame, smoothFactor)
         else
-            -- No target found nearby
             healthLabel.Text = "Target HP: N/A"
             healthBarFill.Size = UDim2.new(0, 0, 1, 0)
         end
