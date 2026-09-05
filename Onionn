@@ -1,0 +1,350 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local localPlayer = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local playerGui = localPlayer:WaitForChild("PlayerGui")
+
+-- ==========================================
+-- 1. BUILD THE GREEN UI
+-- ==========================================
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "GreenOnionV2Gui"
+screenGui.ResetOnSpawn = false 
+screenGui.Parent = playerGui
+
+-- Increased height to 170 to fit the health bar
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 240, 0, 170)
+mainFrame.Position = UDim2.new(0.05, 0, 0.4, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(15, 25, 15) -- Dark green tint
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.ClipsDescendants = true 
+mainFrame.Parent = screenGui
+
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0, 6)
+uiCorner.Parent = mainFrame
+
+local uiStroke = Instance.new("UIStroke")
+uiStroke.Color = Color3.fromRGB(50, 200, 50) -- Green stroke
+uiStroke.Thickness = 1.5
+uiStroke.Parent = mainFrame
+
+-- Top Bar
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1, 0, 0, 30)
+topBar.BackgroundColor3 = Color3.fromRGB(25, 35, 25)
+topBar.BorderSizePixel = 0
+topBar.Parent = mainFrame
+
+local topCorner = Instance.new("UICorner")
+topCorner.CornerRadius = UDim.new(0, 6)
+topCorner.Parent = topBar
+
+local topFix = Instance.new("Frame")
+topFix.Size = UDim2.new(1, 0, 0, 6)
+topFix.Position = UDim2.new(0, 0, 1, -6)
+topFix.BackgroundColor3 = Color3.fromRGB(25, 35, 25)
+topFix.BorderSizePixel = 0
+topFix.Parent = topBar
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -60, 1, 0)
+titleLabel.Position = UDim2.new(0, 10, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "GREEN ONION V2"
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 14
+titleLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = topBar
+
+-- Window Controls
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Size = UDim2.new(0, 30, 0, 30)
+minimizeBtn.Position = UDim2.new(1, -60, 0, 0)
+minimizeBtn.BackgroundTransparency = 1
+minimizeBtn.Text = "-"
+minimizeBtn.Font = Enum.Font.GothamBold
+minimizeBtn.TextSize = 18
+minimizeBtn.TextColor3 = Color3.fromRGB(150, 200, 150)
+minimizeBtn.Parent = topBar
+
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 30, 0, 30)
+closeBtn.Position = UDim2.new(1, -30, 0, 0)
+closeBtn.BackgroundTransparency = 1
+closeBtn.Text = "X"
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 14
+closeBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
+closeBtn.Parent = topBar
+
+-- Content Area
+local contentFrame = Instance.new("Frame")
+contentFrame.Size = UDim2.new(1, 0, 1, -30)
+contentFrame.Position = UDim2.new(0, 0, 0, 30)
+contentFrame.BackgroundTransparency = 1
+contentFrame.Parent = mainFrame
+
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, 0, 0, 25)
+statusLabel.Position = UDim2.new(0, 0, 0, 5)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Aim: OFF (Right-Click)"
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextSize = 13
+statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+statusLabel.Parent = contentFrame
+
+-- Target Health Bar System
+local healthLabel = Instance.new("TextLabel")
+healthLabel.Size = UDim2.new(0.8, 0, 0, 15)
+healthLabel.Position = UDim2.new(0.1, 0, 0, 35)
+healthLabel.BackgroundTransparency = 1
+healthLabel.Text = "Target HP: N/A"
+healthLabel.Font = Enum.Font.GothamBold
+healthLabel.TextSize = 11
+healthLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+healthLabel.TextXAlignment = Enum.TextXAlignment.Left
+healthLabel.Parent = contentFrame
+
+local healthBarBG = Instance.new("Frame")
+healthBarBG.Size = UDim2.new(0.8, 0, 0, 10)
+healthBarBG.Position = UDim2.new(0.1, 0, 0, 52)
+healthBarBG.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+healthBarBG.BorderSizePixel = 0
+healthBarBG.Parent = contentFrame
+
+local healthBarFill = Instance.new("Frame")
+healthBarFill.Size = UDim2.new(0, 0, 1, 0) -- Starts empty
+healthBarFill.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+healthBarFill.BorderSizePixel = 0
+healthBarFill.Parent = healthBarBG
+
+local rampageBtn = Instance.new("TextButton")
+rampageBtn.Size = UDim2.new(0.8, 0, 0, 35)
+rampageBtn.Position = UDim2.new(0.1, 0, 0, 80)
+rampageBtn.BackgroundColor3 = Color3.fromRGB(30, 50, 30)
+rampageBtn.Text = "GREEN ONION RAMPAGE: OFF"
+rampageBtn.Font = Enum.Font.GothamBold
+rampageBtn.TextSize = 11
+rampageBtn.TextColor3 = Color3.fromRGB(150, 200, 150)
+rampageBtn.Parent = contentFrame
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(0, 4)
+btnCorner.Parent = rampageBtn
+
+-- ==========================================
+-- 2. WINDOW CONTROL & DRAGGING LOGIC
+-- ==========================================
+local isMinimized = false
+
+minimizeBtn.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    local targetSize = isMinimized and UDim2.new(0, 240, 0, 30) or UDim2.new(0, 240, 0, 170)
+    local tween = TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = targetSize})
+    tween:Play()
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+    script:Destroy()
+end)
+
+local dragging, dragInput, dragStart, startPos
+topBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
+topBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- ==========================================
+-- 3. SPINNING GREEN TARGET CIRCLE
+-- ==========================================
+local circleFrame = Instance.new("Frame")
+circleFrame.Size = UDim2.new(0, 150, 0, 150)
+circleFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+circleFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+circleFrame.BackgroundTransparency = 1
+circleFrame.Visible = false
+circleFrame.Parent = screenGui
+
+local circleCorner = Instance.new("UICorner")
+circleCorner.CornerRadius = UDim.new(1, 0)
+circleCorner.Parent = circleFrame
+
+local circleStroke = Instance.new("UIStroke")
+circleStroke.Thickness = 3
+circleStroke.Color = Color3.fromRGB(255, 255, 255)
+circleStroke.Parent = circleFrame
+
+local circleGradient = Instance.new("UIGradient")
+-- Sleek green gradient
+circleGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 100, 0)),     -- Dark Green
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(50, 255, 50)), -- Lime Green
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 100, 0))      -- Dark Green
+})
+circleGradient.Parent = circleStroke
+
+-- ==========================================
+-- 4. ABILITY LOGIC & HEALTH BAR
+-- ==========================================
+local aimbotActive = false
+local rampageActive = false
+
+rampageBtn.MouseButton1Click:Connect(function()
+    rampageActive = not rampageActive
+    if rampageActive then
+        rampageBtn.Text = "GREEN ONION RAMPAGE: ON"
+        rampageBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+        rampageBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        uiStroke.Color = Color3.fromRGB(0, 255, 0)
+        circleGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(50,255,50)), ColorSequenceKeypoint.new(1, Color3.fromRGB(150,255,150))}
+    else
+        rampageBtn.Text = "GREEN ONION RAMPAGE: OFF"
+        rampageBtn.BackgroundColor3 = Color3.fromRGB(30, 50, 30)
+        rampageBtn.TextColor3 = Color3.fromRGB(150, 200, 150)
+        uiStroke.Color = Color3.fromRGB(50, 200, 50)
+        circleGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 100, 0)), ColorSequenceKeypoint.new(0.5, Color3.fromRGB(50, 255, 50)), ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 100, 0))})
+    end
+end)
+
+local function getNearestTarget()
+    local nearestDistance = math.huge
+    local nearestTarget = nil
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= localPlayer and player.Character and player.Character:FindFirstChild("Head") then
+            local humanoid = player.Character:FindFirstChild("Humanoid")
+            if humanoid and humanoid.Health > 0 then
+                if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    local myPos = localPlayer.Character.HumanoidRootPart.Position
+                    local targetPos = player.Character.Head.Position
+                    local distance = (myPos - targetPos).Magnitude
+                    
+                    if distance < nearestDistance then
+                        nearestDistance = distance
+                        nearestTarget = player.Character.Head
+                    end
+                end
+            end
+        end
+    end
+    return nearestTarget
+end
+
+local function applyESP()
+    local espColor = rampageActive and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(0, 150, 0)
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= localPlayer and player.Character then
+            local highlight = player.Character:FindFirstChild("AimBoy_Highlight")
+            if not highlight then
+                highlight = Instance.new("Highlight")
+                highlight.Name = "AimBoy_Highlight"
+                highlight.FillTransparency = 0.6
+                highlight.OutlineTransparency = 0.1
+                highlight.Parent = player.Character
+            end
+            highlight.FillColor = espColor
+            highlight.OutlineColor = espColor
+        end
+    end
+end
+
+local function clearESP()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Character then
+            local highlight = player.Character:FindFirstChild("AimBoy_Highlight")
+            if highlight then highlight:Destroy() end
+        end
+    end
+end
+
+-- ==========================================
+-- 5. RUNTIME CONNECTIONS
+-- ==========================================
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.UserInputType == Enum.UserInputType.MouseButton2 then
+        aimbotActive = not aimbotActive
+        circleFrame.Visible = aimbotActive
+        
+        if aimbotActive then
+            statusLabel.Text = "Aim: TRACKING"
+            statusLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
+            applyESP()
+        else
+            statusLabel.Text = "Aim: OFF (Right-Click)"
+            statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+            healthLabel.Text = "Target HP: N/A"
+            healthBarFill.Size = UDim2.new(0, 0, 1, 0)
+            clearESP()
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function(deltaTime)
+    if aimbotActive then
+        local spinSpeed = rampageActive and 400 or 150
+        circleGradient.Rotation = (circleGradient.Rotation + spinSpeed * deltaTime) % 360
+        
+        applyESP()
+        
+        local target = getNearestTarget()
+        if target then
+            -- Update target health bar
+            local targetHumanoid = target.Parent:FindFirstChild("Humanoid")
+            if targetHumanoid then
+                local hp = math.max(0, targetHumanoid.Health)
+                local maxHp = targetHumanoid.MaxHealth
+                local hpPercent = hp / maxHp
+                
+                healthLabel.Text = "Target HP: " .. math.floor(hp) .. " / " .. math.floor(maxHp)
+                healthBarFill.Size = UDim2.new(hpPercent, 0, 1, 0)
+            end
+
+            -- Aim smoothing
+            local smoothFactor = rampageActive and 0.85 or 0.15
+            local goalCFrame = CFrame.new(camera.CFrame.Position, target.Position)
+            camera.CFrame = camera.CFrame:Lerp(goalCFrame, smoothFactor)
+        else
+            -- No target found nearby
+            healthLabel.Text = "Target HP: N/A"
+            healthBarFill.Size = UDim2.new(0, 0, 1, 0)
+        end
+    end
+end)
+
+localPlayer.CharacterAdded:Connect(function()
+    aimbotActive = false
+    circleFrame.Visible = false
+    statusLabel.Text = "Aim: OFF (Right-Click)"
+    statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+    healthLabel.Text = "Target HP: N/A"
+    healthBarFill.Size = UDim2.new(0, 0, 1, 0)
+    clearESP()
+end)
